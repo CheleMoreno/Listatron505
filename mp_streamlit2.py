@@ -61,105 +61,136 @@ def create_excel_file(men_df, women_df, kids_df, work_df, nano_df):
 # Streamlit App
 st.title('🚀 LISTATRON 505')
 
-#Separate in tabs. Still deciding if I show them do it differently. REVIEW THIS
-tab1, tab2 = st.tabs(["Generar Listas", "Contar Dias"])
+# Sidebar - Day Counter Utility
+st.sidebar.title("🗓️ Contador de días")
 
-#File converter tab
-with tab1:
-    st.write('Carga el archivo y se descarga ordenado papá')
+# Start date input
+start_date = st.sidebar.date_input("Fecha de compra")
 
-    # File uploader
-    uploaded_file = st.file_uploader("Elegí el archivo", type="csv")
+# End date input (optional)
+use_today = st.sidebar.checkbox("Hasta HOY", value=True)
 
-    if uploaded_file is not None:
-        try:
-            # Read the CSV file
-            df = pd.read_csv(uploaded_file)
+if use_today:
+    end_date = date.today()
+else:
+    end_date = st.sidebar.date_input("Elegir fecha", min_value=start_date)
+
+# Calculate difference and display
+if start_date and end_date:
+    delta = end_date - start_date
+    
+    #Show action dependent on time
+    if delta.days > 45:
+        st.sidebar.subheader(f"**{start_date.strftime('%d %b %Y')}** - **{end_date.strftime('%d %b %Y')}**")
+        st.sidebar.title(f"📅 **{delta.days}** días")
+        st.sidebar.markdown("---")
+        st.sidebar.title(":red[❌ _No se puede hacer el cambio_]")
+    elif delta.days > 0 and delta.days <= 45:
+        st.sidebar.subheader(f"**{start_date.strftime('%d %b %Y')}** - **{end_date.strftime('%d %b %Y')}**")
+        st.sidebar.title(f"📅 **{delta.days}** días")
+        st.sidebar.markdown("---")
+        st.sidebar.title(":green[✅ _Se puede hacer el cambio_]")
+    elif delta.days < 0:
+        st.sidebar.title(":red[Error!❌ Esa fecha es en el futuro]")
+        st.sidebar.subheader(f"Faltan {abs(delta.days)} dias para llegar")
+    elif delta.days == 0:
+        st.sidebar.markdown("---")
+        st.sidebar.title(f"Es hoy!")
+
+
+st.write('Carga el archivo y se descarga ordenado papá')
+
+# File uploader
+uploaded_file = st.file_uploader("Elegí el archivo", type="csv")
+
+if uploaded_file is not None:
+    try:
+        # Read the CSV file
+        df = pd.read_csv(uploaded_file)
+        
+        # Process the data
+        men_df, women_df, kids_df, work_df, nano_df, total_qty, error = process_dataframe(df)
+        
+        if error:
+            st.error(f"Error: {error}")
+        else:
+            st.success(f"Se subio tuani! Total pares: {int(total_qty)}")
+
+            # Create and offer download
+            excel_data = create_excel_file(men_df, women_df, kids_df, work_df, nano_df)
             
-            # Process the data
-            men_df, women_df, kids_df, work_df, nano_df, total_qty, error = process_dataframe(df)
+            st.markdown("---")
+            st.subheader("📥 Descargame dog")
+            st.download_button(
+                label="📥 Descargar archivo ordenado",
+                data=excel_data,
+                file_name="data_sorted.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
             
-            if error:
-                st.error(f"Error: {error}")
-            else:
-                st.success(f"Se subio tuani! Total pares: {int(total_qty)}")
+            st.success("Se guardó tuani! Descargalo dog")
+            st.markdown("---")
 
-                # Create and offer download
-                excel_data = create_excel_file(men_df, women_df, kids_df, work_df, nano_df)
+            st.subheader("Preview para revisar que todo Gucci")
+            
+            # Show summary with total Qty for each category
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                men_total = men_df['Total'].sum() if not men_df.empty else 0
                 
-                st.markdown("---")
-                st.subheader("📥 Descargame dog")
-                st.download_button(
-                    label="📥 Descargar archivo ordenado",
-                    data=excel_data,
-                    file_name="data_sorted.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-                
-                st.success("Se guardó tuani! Descargalo dog")
-                st.markdown("---")
+                st.metric("Men", f"{int(men_total)}", f"{len(men_df)} refes")
+            with col2:
+                women_total = women_df['Total'].sum() if not women_df.empty else 0
+                st.metric("Women", f"{int(women_total)}", f"{len(women_df)} refes")
+            with col3:
+                kids_total = kids_df['Total'].sum() if not kids_df.empty else 0
+                st.metric("Kids", f"{int(kids_total)}", f"{len(kids_df)} refes")
+            with col4:
+                work_total = work_df['Total'].sum() if not work_df.empty else 0
+                st.metric("Work", f"{int(work_total)}", f"{len(work_df)} refes")
+            with col5:
+                nano_total = nano_df['Total'].sum() if not nano_df.empty else 0
+                st.metric("Nano", f"{int(nano_total)}", f"{len(nano_df)} refes")
+            
+            # Show preview of each category
+            categories = {
+                "Men": men_df,
+                "Women": women_df,
+                "Kids": kids_df,
+                "Work": work_df,
+                "Nano": nano_df
+            }
+            
+            for category, data in categories.items():
+                if not data.empty:
+                    with st.expander(f"Preview {category} data"):
+                        st.dataframe(data)
+            
 
-                st.subheader("Preview para revisar que todo Gucci")
-                
-                # Show summary with total Qty for each category
-                col1, col2, col3, col4, col5 = st.columns(5)
-                with col1:
-                    men_total = men_df['Total'].sum() if not men_df.empty else 0
-                    
-                    st.metric("Men", f"{int(men_total)}", f"{len(men_df)} refes")
-                with col2:
-                    women_total = women_df['Total'].sum() if not women_df.empty else 0
-                    st.metric("Women", f"{int(women_total)}", f"{len(women_df)} refes")
-                with col3:
-                    kids_total = kids_df['Total'].sum() if not kids_df.empty else 0
-                    st.metric("Kids", f"{int(kids_total)}", f"{len(kids_df)} refes")
-                with col4:
-                    work_total = work_df['Total'].sum() if not work_df.empty else 0
-                    st.metric("Work", f"{int(work_total)}", f"{len(work_df)} refes")
-                with col5:
-                    nano_total = nano_df['Total'].sum() if not nano_df.empty else 0
-                    st.metric("Nano", f"{int(nano_total)}", f"{len(nano_df)} refes")
-                
-                # Show preview of each category
-                categories = {
-                    "Men": men_df,
-                    "Women": women_df,
-                    "Kids": kids_df,
-                    "Work": work_df,
-                    "Nano": nano_df
-                }
-                
-                for category, data in categories.items():
-                    if not data.empty:
-                        with st.expander(f"Preview {category} data"):
-                            st.dataframe(data)
-                
+    except Exception as e:
+        st.error(f"Error leyendo: {str(e)}")
+else:
+    st.info("Tiene que ser CSV")
 
-                
-        except Exception as e:
-            st.error(f"Error leyendo: {str(e)}")
-    else:
-        st.info("Tiene que ser CSV")
+# #Day counter tab        
+# with tab2:
+#     st.title("Contador de dias")
 
-#Day counter tab        
-with tab2:
-    st.title("Contador de dias")
+#     # Start date input
+#     start_date = st.date_input("Fecha de compra")
 
-    # Start date input
-    start_date = st.date_input("Fecha de compra")
+#     # End date input (optional)
+#     use_today = st.checkbox("Hasta HOY", value=True)
 
-    # End date input (optional)
-    use_today = st.checkbox("Hasta HOY", value=True)
+#     if use_today:
+#         end_date = date.today()
+#     else:
+#         end_date = st.date_input("Elegir fecha", min_value=start_date)
 
-    if use_today:
-        end_date = date.today()
-    else:
-        end_date = st.date_input("Elegir fecha", min_value=start_date)
-
-    # Calculate difference and display
-    if start_date and end_date:
-        delta = end_date - start_date
-        st.write(f"📅 Numero de dias entre **{start_date}** y **{end_date}**: `{delta.days}` days")
+#     # Calculate difference and display
+#     if start_date and end_date:
+#         delta = end_date - start_date
+#         st.write(f"📅 Numero de dias entre **{start_date}** y **{end_date}**: `{delta.days}` days")
 
 # Footer
 st.markdown("---")
