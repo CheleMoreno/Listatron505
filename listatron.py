@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 def process_dataframe(df):
     try:
@@ -67,6 +67,9 @@ st.sidebar.title("🗓️ Contador de días")
 # Start date input
 start_date = st.sidebar.date_input("Fecha de compra")
 
+# Calculate date 45 days from start_date
+date_plus_45 = start_date + timedelta(days=45)
+
 # End date input (optional)
 use_today = st.sidebar.checkbox("Hasta HOY", value=True)
 
@@ -101,6 +104,7 @@ if start_date and end_date:
     elif delta.days == 0:
         st.sidebar.markdown("---")
         st.sidebar.title(f"Es hoy!")
+        st.sidebar.markdown(f"📅 **45 días después**: {date_plus_45.strftime('%d/%m/%Y')}")
 
 
 st.write('Carga el archivo y se descarga ordenado papá')
