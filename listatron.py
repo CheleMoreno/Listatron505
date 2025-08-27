@@ -68,6 +68,10 @@ def style_cell(cell):
     cell.alignment = Alignment(horizontal="center", vertical="center")
     cell.font = Font(size=14, bold=True)
 
+def style_ref(cell):
+    cell.alignment = Alignment(horizontal="center", vertical="center")
+    cell.font = Font(size=14, italic=True)    
+
 def fill_customer_data(ws, customer, position):
     """Fill customer data in specific position on worksheet"""
     # Define cell coordinates for each position (1-10)
@@ -92,11 +96,11 @@ def fill_customer_data(ws, customer, position):
     ws[coords["number"]] = customer["NUMBER"]
     style_cell(ws[coords["number"]])
     ws[coords["obs"]] = f"{customer["REF"]} {customer["COLOR"]} {customer["SIZE"]}"
-    style_cell(ws[coords["obs"]])
+    style_ref(ws[coords["obs"]])
     ws[coords["worker"]] = customer["WORKER"]
     style_cell(ws[coords["worker"]])
     ws[coords["date"]] = f"Fecha: {customer['DATE']}"
-    style_cell(ws[coords["date"]])
+    style_ref(ws[coords["date"]])
 
 def process_all_customers(client_df, template_file):
     total_customers = len(client_df)
