@@ -76,16 +76,16 @@ def fill_customer_data(ws, customer, position):
     """Fill customer data in specific position on worksheet"""
     # Define cell coordinates for each position (1-10)
     positions = {
-        1: {"name": "D4", "number": "E5", "obs": "C6", "worker": "D8", "date": "G8"},
-        2: {"name": "N4", "number": "O5", "obs": "M6", "worker": "N8", "date": "Q8"},
-        3: {"name": "D13", "number": "E14", "obs": "C15", "worker": "D17", "date": "G17"},
-        4: {"name": "N13", "number": "O14", "obs": "M15", "worker": "N17", "date": "Q17"},
-        5: {"name": "D22", "number": "E23", "obs": "C24", "worker": "D26", "date": "G26"},
-        6: {"name": "N22", "number": "O23", "obs": "M24", "worker": "N26", "date": "Q26"},
-        7: {"name": "D31", "number": "E32", "obs": "C33", "worker": "D35", "date": "G35"},
-        8: {"name": "N31", "number": "O32", "obs": "M33", "worker": "N35", "date": "Q35"},
-        9: {"name": "D40", "number": "E41", "obs": "C42", "worker": "D44", "date": "G44"},
-        10: {"name": "N40", "number": "O41", "obs": "M42", "worker": "N44", "date": "Q44"}
+        1: {"name": "D4", "number": "E5", "obs": "C6", "abonado": "B7", "worker": "D8", "date": "G8"},
+        2: {"name": "N4", "number": "O5", "obs": "M6", "abonado": "L7","worker": "N8", "date": "Q8"},
+        3: {"name": "D13", "number": "E14", "obs": "C15","abonado": "B16", "worker": "D17", "date": "G17"},
+        4: {"name": "N13", "number": "O14", "obs": "M15", "abonado": "L16", "worker": "N17", "date": "Q17"},
+        5: {"name": "D22", "number": "E23", "obs": "C24", "abonado": "B25", "worker": "D26", "date": "G26"},
+        6: {"name": "N22", "number": "O23", "obs": "M24", "abonado": "L25", "worker": "N26", "date": "Q26"},
+        7: {"name": "D31", "number": "E32", "obs": "C33", "abonado": "B34", "worker": "D35", "date": "G35"},
+        8: {"name": "N31", "number": "O32", "obs": "M33", "abonado": "L34", "worker": "N35", "date": "Q35"},
+        9: {"name": "D40", "number": "E41", "obs": "C42", "abonado": "B43", "worker": "D44", "date": "G44"},
+        10: {"name": "N40", "number": "O41", "obs": "M42", "abonado": "L43", "worker": "N44", "date": "Q44"}
     }
     
     coords = positions[position]
@@ -93,12 +93,19 @@ def fill_customer_data(ws, customer, position):
     # Fill the data and style it
     ws[coords["name"]] = f"{customer['NAME']} {customer['LAST NAME'] if pd.notna(customer['LAST NAME']) else ''}"
     style_cell(ws[coords["name"]])
+
     ws[coords["number"]] = customer["NUMBER"]
     style_cell(ws[coords["number"]])
+
     ws[coords["obs"]] = f"{customer["REF"]} {customer["COLOR"]} {customer["SIZE"]}"
     style_ref(ws[coords["obs"]])
+
+    ws[coords["abonado"]] = customer["ABONADO"]
+    style_cell(ws[coords["abonado"]])
+
     ws[coords["worker"]] = customer["WORKER"]
     style_cell(ws[coords["worker"]])
+
     ws[coords["date"]] = f"Fecha: {customer['DATE']}"
     style_ref(ws[coords["date"]])
 
