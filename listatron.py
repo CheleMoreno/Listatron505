@@ -64,13 +64,25 @@ def create_excel_file(men_df, women_df, kids_df, work_df, nano_df):
     return output.getvalue()
 
 # Reservatron stuff
-def style_cell(cell):
+def style_cell_name(cell):
     cell.alignment = Alignment(horizontal="center", vertical="center")
     cell.font = Font(size=14, bold=True)
-
-def style_ref(cell):
+    
+def style_cell_number(cell):
     cell.alignment = Alignment(horizontal="center", vertical="center")
-    cell.font = Font(size=14, italic=True)    
+    cell.font = Font(size=14)
+
+def style_cell_ref(cell):
+    cell.alignment = Alignment(horizontal="center", vertical="center")
+    cell.font = Font(size=14, italic=True)
+
+def style_cell_abonado(cell):
+    cell.alignment = Alignment(horizontal="center", vertical="center")
+    cell.font = Font(size=14, italic=True, underline="double")
+
+def style_cell_date(cell):
+    cell.alignment = Alignment(horizontal="center", vertical="center")
+    cell.font = Font(size=12, italic=True)
 
 def fill_customer_data(ws, customer, position):
     """Fill customer data in specific position on worksheet"""
@@ -92,22 +104,30 @@ def fill_customer_data(ws, customer, position):
     
     # Fill the data and style it
     ws[coords["name"]] = f"{customer['NAME']} {customer['LAST NAME'] if pd.notna(customer['LAST NAME']) else ''}"
-    style_cell(ws[coords["name"]])
+    style_cell_name(ws[coords["name"]])
 
     ws[coords["number"]] = customer["NUMBER"]
-    style_cell(ws[coords["number"]])
+    style_cell_number(ws[coords["number"]])
 
     ws[coords["obs"]] = f"{customer["REF"]} {customer["COLOR"]} {customer["SIZE"]}"
-    style_ref(ws[coords["obs"]])
+    style_cell_ref(ws[coords["obs"]])
 
     ws[coords["abonado"]] = customer["ABONADO"]
-    style_cell(ws[coords["abonado"]])
+    style_cell_abonado(ws[coords["abonado"]])
 
     ws[coords["worker"]] = customer["WORKER"]
-    style_cell(ws[coords["worker"]])
+    style_cell_date(ws[coords["worker"]])
 
-    ws[coords["date"]] = f"Fecha: {customer['DATE']}"
-    style_ref(ws[coords["date"]])
+    # Handle the date time 00:00:00 thingy
+    date_val = customer["DATE"]
+
+    if isinstance(date_val, (pd.Timestamp, datetime)):
+        date_val = date_val.strftime("%d/%m/%y")
+    else:
+        date_val = str(date_val)
+
+    ws[coords["date"]] = f"Fecha: {date_val}"
+    style_cell_date(ws[coords["date"]])
 
 def process_all_customers(client_df, template_file):
     total_customers = len(client_df)
@@ -119,6 +139,11 @@ def process_all_customers(client_df, template_file):
     for file_num in range(num_files):
         # Load fresh template for each file
         wb = load_workbook(template_file)
+
+        # Lets get rid of the sheet with the user data
+        if "reserva_info" in wb.sheetnames:
+            del wb["reserva_info"]
+
         ws = wb['reserva_template']
         
         # Calculate customer range for this file
@@ -269,14 +294,13 @@ with tab1:
 with tab2:
     st.write("A llenar reservas")
 
-    uploaded_data = st.file_uploader("Dame la info de reservas (.xlsx)", type=["xlsx"])
-    uploaded_template = st.file_uploader("Dame el template (.xlsx)", type=["xlsx"])
+    uploaded_data = st.file_uploader("Dame la info de reservas y los templates en un solo excel pls (.xlsx)", type=["xlsx"])
 
-    if uploaded_data and uploaded_template:
-        client_df = pd.read_excel(uploaded_data)
+    if uploaded_data:
+        client_df = pd.read_excel(uploaded_data, sheet_name="reserva_info")
 
         if st.button("Generate forms"):
-            outputs = process_all_customers(client_df, uploaded_template)
+            outputs = process_all_customers(client_df, uploaded_data)
 
             # If only 1 file show one download button
             if len(outputs) == 1:
