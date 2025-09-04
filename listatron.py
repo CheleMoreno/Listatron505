@@ -112,7 +112,7 @@ def fill_customer_data(ws, customer, position):
     ws[coords["obs"]] = f"{customer["REF"]} {customer["COLOR"]} {customer["SIZE"]}"
     style_cell_ref(ws[coords["obs"]])
 
-    ws[coords["abonado"]] = customer["ABONADO"]
+    ws[coords["abonado"]] = f"{customer["ABONADO"]} ABONADO"
     style_cell_abonado(ws[coords["abonado"]])
 
     ws[coords["worker"]] = customer["WORKER"]
