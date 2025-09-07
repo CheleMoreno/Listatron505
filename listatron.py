@@ -78,7 +78,7 @@ def style_cell_ref(cell):
 
 def style_cell_abonado(cell):
     cell.alignment = Alignment(horizontal="center", vertical="center")
-    cell.font = Font(size=14, italic=True, underline="double")
+    cell.font = Font(size=14, italic=True, underline="single")
 
 def style_cell_date(cell):
     cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -112,7 +112,10 @@ def fill_customer_data(ws, customer, position):
     ws[coords["obs"]] = f"{customer["REF"]} {customer["COLOR"]} {customer["SIZE"]}"
     style_cell_ref(ws[coords["obs"]])
 
-    ws[coords["abonado"]] = f"{customer["ABONADO"]} ABONADO"
+    if int(customer["PAIRS"]) > 1:
+        ws[coords["abonado"]] = f"{customer["ABONADO"]} ABONADO // {customer["PAIRS"]} PARES"
+    else:
+        ws[coords["abonado"]] = f"{customer["ABONADO"]} ABONADO"
     style_cell_abonado(ws[coords["abonado"]])
 
     ws[coords["worker"]] = customer["WORKER"]
@@ -298,6 +301,10 @@ with tab2:
 
     if uploaded_data:
         client_df = pd.read_excel(uploaded_data, sheet_name="reserva_info")
+
+        number_count = client_df["NUMBER"].value_counts()
+
+        client_df["PAIRS"] = client_df["NUMBER"].map(number_count)
 
         if st.button("Generate forms"):
             outputs = process_all_customers(client_df, uploaded_data)
