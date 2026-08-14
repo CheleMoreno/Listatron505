@@ -64,6 +64,17 @@ def create_excel_file(men_df, women_df, kids_df, work_df, nano_df):
     return output.getvalue()
 
 # Reservatron stuff
+def shoe_formatting(size):
+    if pd.isna(size):
+        return ""
+    
+    size = float(size)
+
+    if size.is_integer():
+        return str(int(size))
+    
+    return str(size)
+
 def style_cell_name(cell):
     cell.alignment = Alignment(horizontal="center", vertical="center")
     cell.font = Font(size=14, bold=True)
@@ -109,7 +120,8 @@ def fill_customer_data(ws, customer, position):
     ws[coords["number"]] = customer["NUMBER"]
     style_cell_number(ws[coords["number"]])
 
-    ws[coords["obs"]] = f"{customer["REF"]} {customer["COLOR"]} {customer["SIZE"]}"
+    size = shoe_formatting(customer["SIZE"])
+    ws[coords["obs"]] = f"{customer["REF"]} {customer["COLOR"]} {size}"
     style_cell_ref(ws[coords["obs"]])
 
     if int(customer["PAIRS"]) > 1:
