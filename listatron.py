@@ -67,13 +67,13 @@ def create_excel_file(men_df, women_df, kids_df, work_df, nano_df):
 def shoe_formatting(size):
     if pd.isna(size):
         return ""
-    
     size = float(size)
-
     if size.is_integer():
         return str(int(size))
-    
     return str(size)
+
+def empty_if_nan(value):
+    return " " if pd.isna(value) else value
 
 def style_cell_name(cell):
     cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -114,23 +114,36 @@ def fill_customer_data(ws, customer, position):
     coords = positions[position]
     
     # Fill the data and style it
-    ws[coords["name"]] = f"{customer['NAME']} {customer['LAST NAME'] if pd.notna(customer['LAST NAME']) else ''}"
+    ws[coords["name"]] = f"{empty_if_nan(customer['NAME'])} {customer['LAST NAME'] if pd.notna(customer['LAST NAME']) else ''}"
     style_cell_name(ws[coords["name"]])
 
-    ws[coords["number"]] = customer["NUMBER"]
+    ws[coords["number"]] = empty_if_nan(customer["NUMBER"])
     style_cell_number(ws[coords["number"]])
 
     size = shoe_formatting(customer["SIZE"])
-    ws[coords["obs"]] = f"{customer["REF"]} {customer["COLOR"]} {size}"
+    ws[coords["obs"]] = f"{empty_if_nan(customer["REF"])} {empty_if_nan(customer["COLOR"])} {size}"
     style_cell_ref(ws[coords["obs"]])
 
-    if int(customer["PAIRS"]) > 1:
-        ws[coords["abonado"]] = f"{customer["ABONADO"]} ABONADO // {customer["PAIRS"]} PARES"
+    abonado = customer["ABONADO"]
+    pairs = customer["PAIRS"]
+
+    abonado_empty = pd.isna(abonado) or str(abonado).strip == ""
+    pairs_empty = pd.isna(pairs) or str(pairs).strip == ""
+
+    if abonado_empty:
+        if not pairs_empty and float(pairs) > 1:
+            ws[coords["abonado"]] = f"{int(pairs)} PARES"
+        else:
+            ws[coords["abonado"]] = " "
+
     else:
-        ws[coords["abonado"]] = f"{customer["ABONADO"]} ABONADO"
+        if not pairs_empty and float(pairs) > 1:
+            ws[coords["abonado"]] = f"{abonado} ABONADO // {int(pairs)} PARES"
+        else:
+            ws[coords["abonado"]] = f"{abonado} ABONADO"
     style_cell_abonado(ws[coords["abonado"]])
 
-    ws[coords["worker"]] = customer["WORKER"]
+    ws[coords["worker"]] = empty_if_nan(customer["WORKER"])
     style_cell_date(ws[coords["worker"]])
 
     # Handle the date time 00:00:00 thingy
@@ -182,7 +195,7 @@ def process_all_customers(client_df, template_file):
         
 
 # Streamlit App
-st.title('🚀 LISTATRON 505')
+st.title('LISTATRON 505')
 
 # Sidebar - Day Counter Utility
 st.sidebar.title("🗓️ Contador de días")
@@ -230,81 +243,100 @@ if start_date and end_date:
         st.sidebar.markdown(f"📅 **45 días después**: {date_plus_45.strftime('%d/%m/%Y')}")
 
 tab1, tab2 = st.tabs(["Listatron", "Reservatron"])
+LISTATRON_UNDER_CONSTRUCTION = True
 
 with tab1:
-
-    st.write('Carga el archivo y se descarga ordenado papá')
-
-    # File uploader
-    uploaded_file = st.file_uploader("Elegí el archivo", type="csv")
-
-    if uploaded_file is not None:
-        try:
-            # Read the CSV file
-            df = pd.read_csv(uploaded_file)
-            
-            # Process the data
-            men_df, women_df, kids_df, work_df, nano_df, total_qty, error = process_dataframe(df)
-            
-            if error:
-                st.error(f"Error: {error}")
-            else:
-                st.success(f"Se subio tuani! Total pares: {int(total_qty)}")
-
-                # Create and offer download
-                excel_data = create_excel_file(men_df, women_df, kids_df, work_df, nano_df)
-                
-                st.markdown("---")
-                st.subheader("📥 Descargame dog")
-                st.download_button(
-                    label="📥 Descargar archivo ordenado",
-                    data=excel_data,
-                    file_name="data_sorted.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-                
-                st.success("Se guardó tuani! Descargalo dog")
-                st.markdown("---")
-
-                st.subheader("Preview para revisar que todo Gucci")
-                
-                # Show summary with total Qty for each category
-                col1, col2, col3, col4, col5 = st.columns(5)
-                with col1:
-                    men_total = men_df['Total'].sum() if not men_df.empty else 0
-                    st.metric("Men", f"{int(men_total)}", f"{len(men_df)} refes")
-                with col2:
-                    women_total = women_df['Total'].sum() if not women_df.empty else 0
-                    st.metric("Women", f"{int(women_total)}", f"{len(women_df)} refes")
-                with col3:
-                    kids_total = kids_df['Total'].sum() if not kids_df.empty else 0
-                    st.metric("Kids", f"{int(kids_total)}", f"{len(kids_df)} refes")
-                with col4:
-                    work_total = work_df['Total'].sum() if not work_df.empty else 0
-                    st.metric("Work", f"{int(work_total)}", f"{len(work_df)} refes")
-                with col5:
-                    nano_total = nano_df['Total'].sum() if not nano_df.empty else 0
-                    st.metric("Nano", f"{int(nano_total)}", f"{len(nano_df)} refes")
-                
-                # Show preview of each category
-                categories = {
-                    "Men": men_df,
-                    "Women": women_df,
-                    "Kids": kids_df,
-                    "Work": work_df,
-                    "Nano": nano_df
-                }
-                
-                for category, data in categories.items():
-                    if not data.empty:
-                        with st.expander(f"Preview {category} data"):
-                            st.dataframe(data)
-                
-
-        except Exception as e:
-            st.error(f"Error leyendo: {str(e)}")
+    if LISTATRON_UNDER_CONSTRUCTION:
+        st.markdown(
+            """
+            <div style="text-align: center; padding: 80px 20px;">
+                <div style="font-size: 80px;">👷‍♂️</div>
+                <h1>LISTATRON</h1>
+                <h2>🚧 BAJO CONSTRUCCION 🚧</h2>
+                <p style="font-size: 20px;">
+                    Estamos actualizando Listatron. <br>
+                    Reservatron funciona tuani y hasta mejor.
+                </p>
+                <p style="font-size: 16px; color: gray;">
+                    Volveremos mas finos
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
     else:
-        st.info("Tiene que ser CSV")
+        st.write('Carga el archivo y se descarga ordenado papá')
+
+        # File uploader
+        uploaded_file = st.file_uploader("Elegí el archivo", type="csv")
+
+        if uploaded_file is not None:
+            try:
+                # Read the CSV file
+                df = pd.read_csv(uploaded_file)
+                
+                # Process the data
+                men_df, women_df, kids_df, work_df, nano_df, total_qty, error = process_dataframe(df)
+                
+                if error:
+                    st.error(f"Error: {error}")
+                else:
+                    st.success(f"Se subio tuani! Total pares: {int(total_qty)}")
+
+                    # Create and offer download
+                    excel_data = create_excel_file(men_df, women_df, kids_df, work_df, nano_df)
+                    
+                    st.markdown("---")
+                    st.subheader("📥 Descargame dog")
+                    st.download_button(
+                        label="📥 Descargar archivo ordenado",
+                        data=excel_data,
+                        file_name="data_sorted.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
+                    
+                    st.success("Se guardó tuani! Descargalo dog")
+                    st.markdown("---")
+
+                    st.subheader("Preview para revisar que todo Gucci")
+                    
+                    # Show summary with total Qty for each category
+                    col1, col2, col3, col4, col5 = st.columns(5)
+                    with col1:
+                        men_total = men_df['Total'].sum() if not men_df.empty else 0
+                        st.metric("Men", f"{int(men_total)}", f"{len(men_df)} refes")
+                    with col2:
+                        women_total = women_df['Total'].sum() if not women_df.empty else 0
+                        st.metric("Women", f"{int(women_total)}", f"{len(women_df)} refes")
+                    with col3:
+                        kids_total = kids_df['Total'].sum() if not kids_df.empty else 0
+                        st.metric("Kids", f"{int(kids_total)}", f"{len(kids_df)} refes")
+                    with col4:
+                        work_total = work_df['Total'].sum() if not work_df.empty else 0
+                        st.metric("Work", f"{int(work_total)}", f"{len(work_df)} refes")
+                    with col5:
+                        nano_total = nano_df['Total'].sum() if not nano_df.empty else 0
+                        st.metric("Nano", f"{int(nano_total)}", f"{len(nano_df)} refes")
+                    
+                    # Show preview of each category
+                    categories = {
+                        "Men": men_df,
+                        "Women": women_df,
+                        "Kids": kids_df,
+                        "Work": work_df,
+                        "Nano": nano_df
+                    }
+                    
+                    for category, data in categories.items():
+                        if not data.empty:
+                            with st.expander(f"Preview {category} data"):
+                                st.dataframe(data)
+                    
+
+            except Exception as e:
+                st.error(f"Error leyendo: {str(e)}")
+        else:
+            st.info("Tiene que ser CSV")
 
 with tab2:
     st.write("A llenar reservas")
