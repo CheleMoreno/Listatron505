@@ -255,7 +255,7 @@ with tab1:
                 <h2>🚧 BAJO CONSTRUCCION 🚧</h2>
                 <p style="font-size: 20px;">
                     Estamos actualizando Listatron. <br>
-                    Reservatron funciona tuani y hasta mejor.
+                    Reservatron funciona mas tuani ahora.
                 </p>
                 <p style="font-size: 16px; color: gray;">
                     Volveremos mas finos
@@ -340,7 +340,6 @@ with tab1:
 
 with tab2:
     st.write("A llenar reservas")
-
     uploaded_data = st.file_uploader("Dame la info de reservas y los templates en un solo excel pls (.xlsx)", type=["xlsx"])
 
     if uploaded_data:
@@ -350,34 +349,34 @@ with tab2:
 
         client_df["PAIRS"] = client_df["NUMBER"].map(number_count)
 
-        if st.button("Generate forms"):
+        if st.button("Rellenar reservas"):
             outputs = process_all_customers(client_df, uploaded_data)
 
             # If only 1 file show one download button
             if len(outputs) == 1:
-                st.download_button("Download forms", data=outputs[0], file_name="filled.xlsx",mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") 
+                st.download_button("Descargar", data=outputs[0], file_name="rellenado.xlsx",mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") 
             else:
                 # Multiple files offer multiple download buttons or zip it
                 zip_buffer = BytesIO()
                 with zipfile.ZipFile(zip_buffer, "w") as zf:
                     for idx, out in enumerate(outputs, start=1):
                         zf.writestr(
-                            f"filled_{idx}.xlsx",
+                            f"rellenado_{idx}.xlsx",
                             out.getvalue()
                         )
                 zip_buffer.seek(0)
                 st.markdown("Esto descarga un zip con todos los archivos")
                 st.download_button(
-                    "Download ALL",
+                    "Descargarlos todos",
                     data=zip_buffer,
-                    file_name="all_forms.zip",
+                    file_name="todos_rellenados.zip",
                     mime="application/zip"
                 )
 
                 # Or download singles
                 st.markdown("Y aqui separados")
                 for idx, out in enumerate(outputs, start=1):
-                    st.download_button(f"Download Page {idx}", data=out, file_name=f"filled_from_{idx}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    st.download_button(f"Separados: {idx}", data=out, file_name=f"Rellenado{idx}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         
 st.markdown("---")
 st.markdown("*SM type shit*")
