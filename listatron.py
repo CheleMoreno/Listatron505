@@ -127,8 +127,8 @@ def fill_customer_data(ws, customer, position):
     abonado = customer["ABONADO"]
     pairs = customer["PAIRS"]
 
-    abonado_empty = pd.isna(abonado) or str(abonado).strip == ""
-    pairs_empty = pd.isna(pairs) or str(pairs).strip == ""
+    abonado_empty = pd.isna(abonado) or str(abonado).strip() == ""
+    pairs_empty = pd.isna(pairs) or str(pairs).strip() == ""
 
     if abonado_empty:
         if not pairs_empty and float(pairs) > 1:
